@@ -1,5 +1,5 @@
 {
-  "name": "armstrong",
+  "name": "armstrong-cms",
   "version": "0.0.1",
   "description": "Lightweight CMS engine designed to sit on top of Elasticsearch",
   "main": "index.js",
