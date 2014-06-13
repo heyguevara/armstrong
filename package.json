@@ -13,8 +13,8 @@
     "type": "git",
     "url": "git://github.com/riskpenguin/armstrong.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Richard Marr<richard.marr@gmail.com>",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/riskpenguin/armstrong/issues"
   },
