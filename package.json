@@ -1,0 +1,25 @@
+{
+  "name": "armstrong",
+  "version": "0.0.1",
+  "description": "Lightweight CMS engine designed to sit on top of Elasticsearch",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha integration"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/riskpenguin/armstrong.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/riskpenguin/armstrong/issues"
+  },
+  "homepage": "https://github.com/riskpenguin/armstrong",
+  "dependencies": {
+    "elasticsearch": "^2.2.0"
+  }
+}
