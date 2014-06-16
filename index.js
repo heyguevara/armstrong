@@ -128,6 +128,7 @@ Armstrong.prototype.getDocByUrl = function( url, callback ){
 	var self = this;
 	this.getDocByField( 'url', url, function( err, res ){
 		if ( err ) return callback(err);
+		if ( !res ) return callback();
 		
 		var views = res._source.views || 0;
 		self.incrementViewCounter( url, ++views );
@@ -152,7 +153,7 @@ Armstrong.prototype.incrementViewCounter = function( url, views, callback ){
 };
 
 
-Armstrong.prototype.getDocByField = function( field, value, callback ){
+Armstrong.prototype.getDocsByField = function( field, value, callback ){
 	
 	var match = {};
 	match[field] = value;
@@ -178,13 +179,18 @@ Armstrong.prototype.getDocByField = function( field, value, callback ){
 	}).then(function (resp) {
 		var hits = resp.hits.hits;
 		
-		callback( undefined, hits[0] );
+		callback( undefined, hits );
 	}, function (err) {
 		callback(err);
 	});
 	
 };
 
+Armstrong.prototype.getDocByField = function( field, value, callback ){
+	this.getDocsByField( field, value, function( err, hits ){
+		callback( undefined, hits[0] );
+	});
+};
 
 Armstrong.prototype.save = function( doc ){
 	var post = {
