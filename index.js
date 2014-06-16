@@ -36,7 +36,9 @@ Armstrong.prototype.map = function( callback ){
 		body : {
 			properties : {
 				published : { type : "date" },
-				views : { type : "integer" }
+				updated : { type : "date" },
+				views : { type : "integer" },
+				body : { type : "string", analyzer : "english" }
 			}
 		}
 /*		"tweet" : {
@@ -58,27 +60,6 @@ Armstrong.prototype.suggest = function( term, callback ){
 				term : {
 					field: 'body',
 				}
-			/*	simple_phrase : {
-					phrase : {
-						analyzer : "body",
-						field : "bigram",
-						size : 1,
-						real_word_error_likelihood : 0.95,
-						max_errors : 0.5,
-						gram_size : 2,
-						direct_generator : [
-							{
-								field : "body",
-								suggest_mode : "always",
-								min_word_length : 1
-							}
-						],
-						highlight: {
-							pre_tag: "<em>",
-							post_tag: "</em>"
-						}
-					}
-				}*/
 			}
 		}
 	},callback);
@@ -105,7 +86,6 @@ Armstrong.prototype.search = function( query, callback ){
 	}).then(function (res) {
 		callback( undefined, res, res.hits.hits );
 	}, function ( err, res ) {
-		console.info(err.message);
 		callback( err, res );
 	});
 	
@@ -129,7 +109,6 @@ Armstrong.prototype.recent = function( conf, callback ){
 };
 
 Armstrong.prototype.popular = function( conf, callback ){
-	
 	this.search({
 		sort : [ { views : "desc" } ], // need to figure out a clean way to push mappings to ES
 		query: { 
@@ -146,22 +125,29 @@ Armstrong.prototype.popular = function( conf, callback ){
 };
 
 Armstrong.prototype.getDocByUrl = function( url, callback ){
-	this.getDocByField( 'url', url, callback );
-	this.incrementViewCounter( url );
+	var self = this;
+	this.getDocByField( 'url', url, function( err, res ){
+		if ( err ) return callback(err);
+		
+		var views = res._source.views || 0;
+		self.incrementViewCounter( url, ++views );
+		callback ( undefined, res );
+	});
 };
 
-Armstrong.prototype.incrementViewCounter = function( url, callback ){
+Armstrong.prototype.incrementViewCounter = function( url, views, callback ){
+	var self = this;
 	this.client.update({
 		index : this.config.index,
 		type : this.config.type,
 		id : url,
 		body: {
-			script: 'ctx._source.views += views',
-			params: { views : 1 }
+			//script: 'ctx._source.views += views',
+			doc: { views : views }
 		}
 	}, function ( err, res ) {
 		if ( callback ) return callback( err, res );
-		if ( err ) console.error(err);
+		if ( err ) console.error('increment',self.config.index,self.config.type,url,views,err);
 	})
 };
 
@@ -218,7 +204,9 @@ Armstrong.prototype.similar = function( id, callback ){
 		index : this.config.index,
 		type : this.config.type,
 		id : id,
-		mlt_fields : 'body'
+		mlt_fields : 'body',
+		min_term_freq : 3,
+		min_doc_freq : 1
 	}, function ( err, res ) {
 		callback( err, res );
 	});
