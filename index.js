@@ -94,6 +94,7 @@ Armstrong.prototype.search = function( query, callback ){
 Armstrong.prototype.recent = function( conf, callback ){
 	
 	this.search({
+		size : conf.count || 10,
 		sort : [ { published : "desc" } ], // need to figure out a clean way to push mappings to ES
 		query: { 
 			filtered : {
@@ -110,6 +111,7 @@ Armstrong.prototype.recent = function( conf, callback ){
 
 Armstrong.prototype.popular = function( conf, callback ){
 	this.search({
+		size : conf.count || 10,
 		sort : [ { views : "desc" } ], // need to figure out a clean way to push mappings to ES
 		query: { 
 			filtered : {
