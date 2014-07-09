@@ -1,7 +1,14 @@
-var elasticsearch = require('elasticsearch');
+var elasticsearch = require('elasticsearch'),
+	EventEmitter = require('events').EventEmitter,
+	util = require('util');
+	
+	
 
 
 function Armstrong( config ){
+	EventEmitter.call(this);
+	var self = this;
+	
 	this.client = new elasticsearch.Client({
 		host: config.host, //'localhost:9200',
 		log: config.log //'trace'
@@ -10,24 +17,18 @@ function Armstrong( config ){
 	this.config = { type:'article' };
 	for ( var prop in config ) this.config[prop] = config[prop];
 	
-	/*this.client.indices.create({
-		index:this.config.index
-	}, function(){
-		console.log('index',arguments)
-	});*/
-	
 	this.client.ping({
 		// ping usually has a 100ms timeout
 		requestTimeout: 1000,
 		// undocumented params are appended to the query string
 		hello: "elasticsearch!"
 	}, function ( err ) {
-		if ( err ) return console.warn('elasticsearch cluster is down!');
-		//console.trace('All is well');
+		if ( err ) self.emit('error',err);
 	});
-	
 	return this;
 }
+util.inherits( Armstrong, EventEmitter );
+
 
 Armstrong.prototype.map = function( callback ){
 	this.client.indices.putMapping({
@@ -89,13 +90,20 @@ Armstrong.prototype._search = function( query, callback ){
 	
 	if ( typeof body == "string" ) {
 		body = {
-			query: {
-				match: {
-					body: query
+			query: { 
+				filtered : {
+					query : query,
+					filter : {
+						and : [
+							{ term : { status : 'published' } }
+						]
+					}
 				}
 			}
 		};
 	}
+	
+	// console.log(JSON.stringify(body),null,'\t');
 	
 	this.client.search({
 		index : this.config.index,
@@ -215,7 +223,7 @@ Armstrong.prototype.getDocByField = function( field, value, callback ){
 	});
 };
 
-Armstrong.prototype.save = function( doc ){
+Armstrong.prototype.save = function( doc, callback ){
 	var post = {
 		index : this.config.index,
 		type : this.config.type,
@@ -223,7 +231,7 @@ Armstrong.prototype.save = function( doc ){
 	};
 	
 	this.client.index( post, function ( err, res ) {
-		console.log(err,res);
+		if ( callback ) callback( err, res );
 	});
 };
 
@@ -233,6 +241,7 @@ Armstrong.prototype.similar = function( id, callback ){
 		type : this.config.type,
 		id : id,
 		mlt_fields : 'body',
+		searchSize : 5,
 		min_term_freq : 3,
 		min_doc_freq : 1
 	}, function ( err, res ) {
@@ -282,7 +291,7 @@ Armstrong.prototype.upsert = function( doc, id, callback ){
 			doc.views = 0;
 			return self.index(doc,id,callback); 
 		}
-		console.log(doc,id,callback)
+		//console.log(doc,id,callback)
 		callback( err, res );
 		//if ( err ) return this.insert( doc, id, callback );
 	});
