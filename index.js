@@ -87,23 +87,28 @@ Armstrong.prototype.search = function( query, callback ){
 Armstrong.prototype._search = function( query, callback ){
 	
 	var body = query;
+	var filter = {
+		and : [
+			{ term : { status : 'published' } },
+			{ missing : { field : 'alternate_titles' } }
+		]
+	};
 	
+	console.log("Seaching - missing titles");
 	if ( typeof body == "string" ) {
+		console.log("is string");
 		body = {
 			query: { 
 				filtered : {
 					query : query,
-					filter : {
-						and : [
-							{ term : { status : 'published' } }
-						]
-					}
+					filter : filter,
 				}
 			}
 		};
+	} else {
+		console.log("is obj");
+		body.filter = filter;
 	}
-	
-	// console.log(JSON.stringify(body),null,'\t');
 	
 	this.client.search({
 		index : this.config.index,
@@ -127,7 +132,8 @@ Armstrong.prototype.recent = function( conf, callback ){
 				query : { match_all:{} },
 				filter : {
 					and : [
-						{ term : { status : 'published' } }
+						{ term : { status : 'published' } },
+						{ missing : { field : 'alternate_titles' } }
 					]
 				}
 			}
@@ -144,7 +150,8 @@ Armstrong.prototype.popular = function( conf, callback ){
 				query : { match_all:{} },
 				filter : {
 					and : [
-						{ term : { status : 'published' } }
+						{ term : { status : 'published' } },
+						{ missing : { field : 'alternate_titles' } }
 					]
 				}
 			}
@@ -198,7 +205,8 @@ Armstrong.prototype.getDocsByField = function( field, value, callback ){
 					query : { match:match },
 					filter : {
 						and : [
-							{ term : { status : 'published' } }
+							{ term : { status : 'published' } },
+							{ missing : { field : 'alternate_titles' } }
 						]
 					}
 				}
