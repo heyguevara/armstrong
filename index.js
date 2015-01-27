@@ -307,6 +307,9 @@ Armstrong.prototype.upsert = function( doc, id, callback ){
 
 
 
+Armstrong.prototype.ping = function( callback ){
+	this.client.ping( { requestTimeout: 500 }, callback );
+};
 
 
 
